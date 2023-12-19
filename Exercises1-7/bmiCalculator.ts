@@ -3,11 +3,11 @@ interface BMIArguments {
   weight: number;
 }
 
-function parseBMIArguments(args: string[]): BMIArguments {
+export function parseBMIArguments(args: string[]): BMIArguments {
   if (args.length < 4) throw new Error('Not enough arguments');
 
-  const height = Number(process.argv[2]);
-  const weight = Number(process.argv[3]);
+  const height = Number(args[2]);
+  const weight = Number(args[3]);
 
   if (isNaN(height) || isNaN(weight)) {
     throw new Error('One or both provided values were not numbers');
@@ -19,7 +19,7 @@ function parseBMIArguments(args: string[]): BMIArguments {
   };
 }
 
-function calculateBmi(height: number, weight: number): string {
+export function calculateBmi(height: number, weight: number): string {
   const bmi = weight / Math.pow(height / 100, 2);
   if (bmi < 18.5) {
     return 'Underweight (unhealthy weight)';
