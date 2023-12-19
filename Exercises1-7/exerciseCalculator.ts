@@ -15,9 +15,10 @@ interface ExercisesArguments {
   dailyHours: number[];
 }
 
-function parseHoursArguments(args: string[]): ExercisesArguments {
+export function parseHoursArguments(args: string[]): ExercisesArguments {
   if (args.length < 4) throw new Error('Not enough arguments');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, __, targetHoursStr, ...dailyHoursStr] = args;
 
   const targetHours = Number(targetHoursStr);
@@ -39,7 +40,7 @@ function parseHoursArguments(args: string[]): ExercisesArguments {
   };
 }
 
-function calculateExercises(
+export function calculateExercises(
   dailyExerciseHours: number[],
   targetDailyHours: number
 ): Result {
