@@ -13,7 +13,7 @@ router.get('/:id', (req, res) => {
   if (!patient) {
     return res.sendStatus(404);
   }
-  return res.send({ ...patient, entries: [] });
+  return res.send(patient);
 });
 
 router.post('/', (req, res) => {

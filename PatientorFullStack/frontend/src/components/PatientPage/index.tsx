@@ -1,15 +1,26 @@
-import { useEffect, useState } from 'react';
-import { Gender, Patient } from '../../types';
+import { useEffect, useMemo, useState } from 'react';
+import { DiagnosesDict, Diagnosis, Gender, Patient } from '../../types';
 import patientService from '../../services/patients';
 import { useParams } from 'react-router-dom';
 import FemaleIcon from '@mui/icons-material/Female';
 import MaleIcon from '@mui/icons-material/Male';
 import TransgenderIcon from '@mui/icons-material/Transgender';
 import { Container } from '@mui/material';
+import EntryDetails from './EntryDetails';
 
-const PatientPage = () => {
+interface PatientPageProps {
+  diagnoses: Diagnosis[];
+}
+
+const PatientPage = ({ diagnoses }: PatientPageProps) => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const { id } = useParams() as { id: string };
+
+  const diagnosesDict: DiagnosesDict = useMemo(() => {
+    return diagnoses.reduce((dict, currentDiagnose) => {
+      return { ...dict, [currentDiagnose.code]: currentDiagnose.name };
+    }, {});
+  }, [diagnoses]);
 
   useEffect(() => {
     const fetchPatient = async (id: string) => {
@@ -37,6 +48,16 @@ const PatientPage = () => {
       </div>
       <p>ssn: {patient.ssn}</p>
       <p>ocuppation: {patient.occupation}</p>
+      <h3>Entries</h3>
+      {patient.entries.map((entry) => {
+        return (
+          <EntryDetails
+            entry={entry}
+            diagnosesDict={diagnosesDict}
+            key={entry.id}
+          />
+        );
+      })}
     </Container>
   );
 };

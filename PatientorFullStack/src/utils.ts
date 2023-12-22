@@ -64,6 +64,7 @@ const toNewPatientEntry = (obj: unknown): NewPatient => {
       gender: parseGender(obj.gender),
       occupation: parseString(obj.occupation),
       ssn: parseSsn(obj.ssn),
+      entries: [],
     };
   }
   throw new Error('Incorrect data: some fields are invalid');
