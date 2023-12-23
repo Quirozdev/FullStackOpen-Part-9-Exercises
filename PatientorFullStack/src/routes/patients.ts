@@ -38,11 +38,8 @@ router.post('/:id/entries', (req, res) => {
       return res.status(404).send({ error: 'No patient found with that id' });
     }
     const newEntry = toNewEntryForPatient(req.body);
-    const patientWithAddedEntry = patientsService.addEntryForPatient(
-      patient,
-      newEntry
-    );
-    return res.send(patientWithAddedEntry);
+    const addedEntry = patientsService.addEntryForPatient(patient, newEntry);
+    return res.send(addedEntry);
   } catch (error: unknown) {
     let errorMessage = 'Something went wrong.';
     if (error instanceof Error) {

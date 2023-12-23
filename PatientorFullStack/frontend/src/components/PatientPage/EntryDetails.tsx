@@ -2,6 +2,7 @@ import React from 'react';
 import {
   DiagnosesDict,
   Entry,
+  EntryType,
   HealthCheckEntry,
   HealthCheckRating,
   HospitalEntry,
@@ -11,6 +12,7 @@ import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import WorkIcon from '@mui/icons-material/Work';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import { assertNever } from '../../utils';
 
 const HealthRatingHeart: React.FC<{ value: HealthCheckRating }> = ({
   value,
@@ -116,18 +118,18 @@ const EntryDetails: React.FC<{
   diagnosesDict: DiagnosesDict;
 }> = ({ entry, diagnosesDict }) => {
   switch (entry.type) {
-    case 'Hospital':
+    case EntryType.Hospital:
       return (
         <HospitalEntryDetails entry={entry} diagnosesDict={diagnosesDict} />
       );
-    case 'OccupationalHealthcare':
+    case EntryType.OccupationalHealthcare:
       return (
         <OccupationalHealthcareEntryDetails
           entry={entry}
           diagnosesDict={diagnosesDict}
         />
       );
-    case 'HealthCheck':
+    case EntryType.HealthCheck:
       return (
         <HealthCheckEntryDetails entry={entry} diagnosesDict={diagnosesDict} />
       );

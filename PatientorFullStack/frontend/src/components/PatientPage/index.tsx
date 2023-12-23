@@ -7,6 +7,7 @@ import MaleIcon from '@mui/icons-material/Male';
 import TransgenderIcon from '@mui/icons-material/Transgender';
 import { Container } from '@mui/material';
 import EntryDetails from './EntryDetails';
+import AddEntryModal from '../AddEntryModal';
 
 interface PatientPageProps {
   diagnoses: Diagnosis[];
@@ -15,6 +16,7 @@ interface PatientPageProps {
 const PatientPage = ({ diagnoses }: PatientPageProps) => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const { id } = useParams() as { id: string };
+  const [openEntryModal, setOpenEntryModal] = useState(false);
 
   const diagnosesDict: DiagnosesDict = useMemo(() => {
     return diagnoses.reduce((dict, currentDiagnose) => {
@@ -48,6 +50,22 @@ const PatientPage = ({ diagnoses }: PatientPageProps) => {
       </div>
       <p>ssn: {patient.ssn}</p>
       <p>ocuppation: {patient.occupation}</p>
+      <button
+        onClick={() => {
+          setOpenEntryModal(true);
+        }}
+      >
+        Add entry
+      </button>
+      <AddEntryModal
+        patient={patient}
+        setPatient={setPatient}
+        diagnoses={diagnoses}
+        open={openEntryModal}
+        onClose={() => {
+          setOpenEntryModal(false);
+        }}
+      />
       <h3>Entries</h3>
       {patient.entries.map((entry) => {
         return (

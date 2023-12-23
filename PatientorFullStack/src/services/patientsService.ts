@@ -33,8 +33,9 @@ const addPatient = (entry: NewPatient): Patient => {
 };
 
 const addEntryForPatient = (patient: Patient, entry: EntryWithoutId) => {
-  patient.entries.push({ ...entry, id: uuid() });
-  return patient;
+  const newEntry = { ...entry, id: uuid() };
+  patient.entries.push(newEntry);
+  return newEntry;
 };
 
 export default {
