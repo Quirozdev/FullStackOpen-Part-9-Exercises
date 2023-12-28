@@ -107,16 +107,34 @@ const parseSickLeave = (
     return undefined;
   }
 
+  if (obj.sickLeave === null) {
+    return undefined;
+  }
+
+  if (typeof obj.sickLeave !== 'object') {
+    throw new Error('sickLeave must be an object if provided');
+  }
+
+  if (Object.keys(obj.sickLeave).length === 0) {
+    return undefined;
+  }
+
+  if (!('startDate' in obj.sickLeave && 'endDate' in obj.sickLeave)) {
+    return undefined;
+  }
+
+  if (!isString(obj.sickLeave.startDate) || !isString(obj.sickLeave.endDate)) {
+    throw new Error('start date and end date from sickLeave must be strings');
+  }
+
   if (
-    obj.sickLeave !== null &&
-    typeof obj.sickLeave === 'object' &&
-    'startDate' in obj.sickLeave &&
-    'endDate' in obj.sickLeave &&
-    isString(obj.sickLeave.startDate) &&
-    isDate(obj.sickLeave.startDate) &&
-    isString(obj.sickLeave.endDate) &&
-    isDate(obj.sickLeave.endDate)
+    obj.sickLeave.startDate.length === 0 &&
+    obj.sickLeave.endDate.length === 0
   ) {
+    return undefined;
+  }
+
+  if (isDate(obj.sickLeave.startDate) && isDate(obj.sickLeave.endDate)) {
     return {
       startDate: obj.sickLeave.startDate,
       endDate: obj.sickLeave.endDate,

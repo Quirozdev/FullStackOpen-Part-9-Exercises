@@ -1,6 +1,4 @@
 import {
-  Alert,
-  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -12,19 +10,11 @@ import {
 import { Diagnosis, EntryType, HealthCheckRating, Patient } from '../../types';
 import React, { useState } from 'react';
 import patientsService from '../../services/patients';
-import axios from 'axios';
 import { assertNever, isHealthCheckRating } from '../../utils';
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
+import CommonEntryFields from './CommonEntryFields';
+import { handleAxiosError } from './utils';
+import useCommonEntry from './hooks/UseCommonEntry';
+import FormFooter from './FormFooter';
 
 interface AddEntryProps {
   patient: Patient;
@@ -33,9 +23,61 @@ interface AddEntryProps {
   closeModal: () => void;
 }
 
+interface CommonEntryFields {
+  type: EntryType;
+  description: string;
+  setDescription: React.Dispatch<React.SetStateAction<string>>;
+  date: string;
+  setDate: React.Dispatch<React.SetStateAction<string>>;
+  specialist: string;
+  setSpecialist: React.Dispatch<React.SetStateAction<string>>;
+  diagnoses: Diagnosis[];
+  diagnosisCodes: Array<Diagnosis['code']>;
+  setDiagnosisCodes: React.Dispatch<
+    React.SetStateAction<Array<Diagnosis['code']>>
+  >;
+}
+
 interface AddEntryFormProps extends AddEntryProps {
   entryType: EntryType;
 }
+
+const AddCommonEntry = ({
+  type,
+  description,
+  setDescription,
+  date,
+  setDate,
+  diagnoses,
+  diagnosisCodes,
+  setDiagnosisCodes,
+  specialist,
+  setSpecialist,
+}: CommonEntryFields) => {
+  return (
+    <>
+      <Typography
+        variant="subtitle1"
+        fontWeight={'bold'}
+        align={'center'}
+        gutterBottom
+      >
+        New {type} entry
+      </Typography>
+      <CommonEntryFields
+        description={description}
+        date={date}
+        diagnoses={diagnoses}
+        specialist={specialist}
+        diagnosisCodes={diagnosisCodes}
+        setDate={setDate}
+        setDescription={setDescription}
+        setDiagnosisCodes={setDiagnosisCodes}
+        setSpecialist={setSpecialist}
+      />
+    </>
+  );
+};
 
 const AddHealthCheckEntry = ({
   patient,
@@ -43,36 +85,27 @@ const AddHealthCheckEntry = ({
   diagnoses,
   closeModal,
 }: AddEntryProps) => {
-  const [description, setDescription] = useState('');
-  const currentDate = new Date();
-  const [date, setDate] = useState(
-    `${currentDate.getFullYear()}-${
-      currentDate.getMonth() + 1
-    }-${currentDate.getDate()}`
-  );
-  const [specialist, setSpecialist] = useState('');
+  const {
+    date,
+    setDate,
+    description,
+    setDescription,
+    diagnosisCodes,
+    setDiagnosisCodes,
+    specialist,
+    setSpecialist,
+    errorMessage,
+    setErrorMessage,
+  } = useCommonEntry();
   const [healthCheckRating, setHealthCheckRating] = useState<HealthCheckRating>(
     HealthCheckRating.Healthy
   );
-  const [diagnosisCodes, setDiagnosisCodes] = useState<
-    Array<Diagnosis['code']>
-  >([]);
-  const [errorMessage, setErrorMessage] = useState('');
 
   const onHealthCheckRatingChange = (event: SelectChangeEvent<number>) => {
     const value = event.target.value;
     if (isHealthCheckRating(value)) {
       setHealthCheckRating(value);
     }
-  };
-
-  const onDiagnosisCodeSelection = (
-    event: SelectChangeEvent<typeof diagnosisCodes>
-  ) => {
-    const {
-      target: { value },
-    } = event;
-    setDiagnosisCodes(typeof value === 'string' ? value.split(',') : value);
   };
 
   const addEntry = async (event: React.SyntheticEvent) => {
@@ -91,60 +124,24 @@ const AddHealthCheckEntry = ({
 
       closeModal();
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if (
-          error?.response?.data &&
-          typeof error?.response?.data === 'object'
-        ) {
-          if (
-            error.response.data.error &&
-            typeof error.response.data.error === 'string'
-          ) {
-            setErrorMessage(error.response.data.error);
-          }
-        } else {
-          setErrorMessage('Unknown Axios error');
-        }
-      } else if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Something went wrong, try again');
-      }
+      setErrorMessage(handleAxiosError(error));
     }
   };
 
   return (
     <form onSubmit={addEntry}>
-      <Typography
-        variant="subtitle1"
-        fontWeight={'bold'}
-        align={'center'}
-        gutterBottom
-      >
-        New HealthCheck entry
-      </Typography>
-      <FormControl fullWidth style={{ marginBottom: 16 }}>
-        <TextField
-          label={'Description'}
-          value={description}
-          onChange={({ target }) => setDescription(target.value)}
-        />
-      </FormControl>
-      <FormControl fullWidth style={{ marginBottom: 16 }}>
-        <TextField
-          label="date"
-          type="date"
-          value={date}
-          onChange={({ target }) => setDate(target.value)}
-        />
-      </FormControl>
-      <FormControl fullWidth style={{ marginBottom: 16 }}>
-        <TextField
-          label={'Specialist'}
-          value={specialist}
-          onChange={({ target }) => setSpecialist(target.value)}
-        />
-      </FormControl>
+      <AddCommonEntry
+        type={EntryType.HealthCheck}
+        description={description}
+        setDescription={setDescription}
+        date={date}
+        setDate={setDate}
+        diagnosisCodes={diagnosisCodes}
+        setDiagnosisCodes={setDiagnosisCodes}
+        specialist={specialist}
+        setSpecialist={setSpecialist}
+        diagnoses={diagnoses}
+      />
       <FormControl variant="standard" fullWidth style={{ marginBottom: 16 }}>
         <InputLabel id="healthcheck-rating">Healthcheck rating</InputLabel>
         <Select
@@ -166,45 +163,186 @@ const AddHealthCheckEntry = ({
           </MenuItem>
         </Select>
       </FormControl>
+      <FormFooter errorMessage={errorMessage} closeModal={closeModal} />
+    </form>
+  );
+};
+
+const AddHospitalEntry = ({
+  patient,
+  setPatient,
+  diagnoses,
+  closeModal,
+}: AddEntryProps) => {
+  const {
+    date,
+    setDate,
+    description,
+    setDescription,
+    diagnosisCodes,
+    setDiagnosisCodes,
+    specialist,
+    setSpecialist,
+    errorMessage,
+    setErrorMessage,
+  } = useCommonEntry();
+
+  const [dischargeCriteria, setDischargeCriteria] = useState('');
+  const [dischargeDate, setDischargeDate] = useState('');
+
+  const addEntry = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    try {
+      const addedEntry = await patientsService.addEntry(patient.id, {
+        description,
+        date,
+        specialist,
+        diagnosisCodes: diagnosisCodes,
+        discharge: {
+          criteria: dischargeCriteria,
+          date: dischargeDate,
+        },
+        type: EntryType.Hospital,
+      });
+
+      setPatient({ ...patient, entries: patient.entries.concat(addedEntry) });
+
+      closeModal();
+    } catch (error: unknown) {
+      setErrorMessage(handleAxiosError(error));
+    }
+  };
+
+  return (
+    <form onSubmit={addEntry}>
+      <AddCommonEntry
+        type={EntryType.Hospital}
+        description={description}
+        setDescription={setDescription}
+        date={date}
+        setDate={setDate}
+        diagnosisCodes={diagnosisCodes}
+        setDiagnosisCodes={setDiagnosisCodes}
+        specialist={specialist}
+        setSpecialist={setSpecialist}
+        diagnoses={diagnoses}
+      />
+      <Typography variant="overline" align={'left'} gutterBottom>
+        Discharge
+      </Typography>
       <FormControl fullWidth style={{ marginBottom: 16 }}>
-        <InputLabel id="diagnosis-codes">Diagnosis codes</InputLabel>
-        <Select
-          multiple
-          value={diagnosisCodes}
-          labelId="diagnosis-codes"
-          onChange={onDiagnosisCodeSelection}
-          variant="standard"
-          MenuProps={MenuProps}
-        >
-          {diagnoses.map((diagnose) => {
-            return (
-              <MenuItem key={diagnose.code} value={diagnose.code}>
-                {diagnose.code}
-              </MenuItem>
-            );
-          })}
-        </Select>
+        <TextField
+          label="Date"
+          InputLabelProps={{ shrink: true }}
+          type="date"
+          value={dischargeDate}
+          onChange={({ target }) => setDischargeDate(target.value)}
+        />
       </FormControl>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'end',
-          gap: 14,
-          alignItems: 'center',
-        }}
-      >
-        {errorMessage && (
-          <Alert severity="error" style={{ flex: 1 }}>
-            {errorMessage}
-          </Alert>
-        )}
-        <Button variant="contained" color="primary" type="submit">
-          Add
-        </Button>
-        <Button variant="contained" color="error" onClick={closeModal}>
-          Cancel
-        </Button>
-      </div>
+      <FormControl fullWidth style={{ marginBottom: 16 }}>
+        <TextField
+          label="Criteria"
+          type="text"
+          value={dischargeCriteria}
+          onChange={({ target }) => setDischargeCriteria(target.value)}
+        />
+      </FormControl>
+      <FormFooter errorMessage={errorMessage} closeModal={closeModal} />
+    </form>
+  );
+};
+
+const AddOccupationalHealthcareEntry = ({
+  patient,
+  setPatient,
+  diagnoses,
+  closeModal,
+}: AddEntryProps) => {
+  const {
+    date,
+    setDate,
+    description,
+    setDescription,
+    diagnosisCodes,
+    setDiagnosisCodes,
+    specialist,
+    setSpecialist,
+    errorMessage,
+    setErrorMessage,
+  } = useCommonEntry();
+
+  const [employerName, setEmployerName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const addEntry = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    try {
+      const addedEntry = await patientsService.addEntry(patient.id, {
+        description,
+        date,
+        specialist,
+        diagnosisCodes: diagnosisCodes,
+        employerName: employerName,
+        sickLeave: {
+          startDate: startDate,
+          endDate: endDate,
+        },
+        type: EntryType.OccupationalHealthcare,
+      });
+
+      setPatient({ ...patient, entries: patient.entries.concat(addedEntry) });
+
+      closeModal();
+    } catch (error: unknown) {
+      setErrorMessage(handleAxiosError(error));
+    }
+  };
+
+  return (
+    <form onSubmit={addEntry}>
+      <AddCommonEntry
+        type={EntryType.OccupationalHealthcare}
+        description={description}
+        setDescription={setDescription}
+        date={date}
+        setDate={setDate}
+        diagnosisCodes={diagnosisCodes}
+        setDiagnosisCodes={setDiagnosisCodes}
+        specialist={specialist}
+        setSpecialist={setSpecialist}
+        diagnoses={diagnoses}
+      />
+      <FormControl fullWidth style={{ marginBottom: 16 }}>
+        <TextField
+          label="Employee"
+          type="text"
+          value={employerName}
+          onChange={({ target }) => setEmployerName(target.value)}
+        />
+      </FormControl>
+      <Typography variant="overline" align={'left'} gutterBottom>
+        Sickleave
+      </Typography>
+      <FormControl fullWidth style={{ marginBottom: 16 }}>
+        <TextField
+          label="Start"
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          value={startDate}
+          onChange={({ target }) => setStartDate(target.value)}
+        />
+      </FormControl>
+      <FormControl fullWidth style={{ marginBottom: 16 }}>
+        <TextField
+          label="End"
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          value={endDate}
+          onChange={({ target }) => setEndDate(target.value)}
+        />
+      </FormControl>
+      <FormFooter errorMessage={errorMessage} closeModal={closeModal} />
     </form>
   );
 };
@@ -227,9 +365,23 @@ const AddEntryForm = ({
         />
       );
     case EntryType.Hospital:
-      return <p></p>;
+      return (
+        <AddHospitalEntry
+          diagnoses={diagnoses}
+          patient={patient}
+          setPatient={setPatient}
+          closeModal={closeModal}
+        />
+      );
     case EntryType.OccupationalHealthcare:
-      return <p></p>;
+      return (
+        <AddOccupationalHealthcareEntry
+          diagnoses={diagnoses}
+          patient={patient}
+          setPatient={setPatient}
+          closeModal={closeModal}
+        />
+      );
     default:
       assertNever(entryType);
   }

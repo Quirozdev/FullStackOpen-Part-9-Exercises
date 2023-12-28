@@ -81,3 +81,18 @@ type UnionOmit<T, K extends string | number | symbol> = T extends unknown
 
 // Define Entry without the 'id' property
 export type EntryWithoutId = UnionOmit<Entry, 'id'>;
+
+export type ExclusiveHealthCheckEntryFields = UnionOmit<
+  HealthCheckEntry,
+  keyof BaseEntry
+>;
+
+export type ExclusiveHospitalEntryFields = UnionOmit<
+  HospitalEntry,
+  keyof BaseEntry
+>;
+
+export type ExclusiveOccupationalHealthcareEntryFields = UnionOmit<
+  OccupationalHealthcareEntry,
+  keyof BaseEntry
+>;
